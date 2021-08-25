@@ -30,7 +30,7 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	} else if b != TC_BLOCKDATA {
 		return fmt.Errorf("There should be TC_BLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TcBlockdata数据块标记\n", b))
+		Log(fmt.Sprintf("%2x:	在对象的WriteObject方法中，我们可以自定义的写入数据，除了非Object数据，其他所有数据将会被写在一起，也就是BlockData\n", b))
 	}
 
 	//should follow by 0x04, 表示4字节后是所有的elements --> header长度
@@ -73,7 +73,7 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("[Deserialize] There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,对象数据块结束的标志\n", b))
+		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
 	}
 
 	return nil
@@ -101,7 +101,10 @@ func (linkedList *JavaLinkedList) Deserialize(reader io.Reader, refs []*JavaRefe
 		return err
 	} else if b != TC_BLOCKDATA {
 		return fmt.Errorf("There should be TC_BLOCKDATA, but got 0x%x", b)
+	} else {
+		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
 	}
+
 	//should follow by 0x04, 表示4字节后是所有的elements
 	if b, err := ReadNextByte(reader); err != nil {
 		return err
@@ -132,7 +135,7 @@ func (linkedList *JavaLinkedList) Deserialize(reader io.Reader, refs []*JavaRefe
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,对象数据块结束的标志\n", b))
+		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
 	}
 
 	return nil

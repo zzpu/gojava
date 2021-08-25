@@ -67,6 +67,7 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 	case TC_ARRAY:
 		js = &JavaTcArray{}
 	case TC_OBJECT:
+		StdLogger.Debug("%2x:	 TC_OBJECT. 声明这是一个新的对象(在list里面) \n", tp)
 		Log(fmt.Sprintf("%2x:	 TC_OBJECT. 声明这是一个新的对象(在list里面) \n", tp))
 		js = &JavaTcObject{}
 	case TC_REFERENCE:

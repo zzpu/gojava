@@ -1,6 +1,9 @@
 package main
 
-import "io"
+import (
+	"encoding/json"
+	"io"
+)
 import "encoding/binary"
 import "fmt"
 
@@ -158,6 +161,8 @@ func AddReference(refs []*JavaReferenceObject, refType byte, refVal interface{})
 				refType,
 				refVal,
 			}
+			jjs, _ := json.Marshal(refVal)
+			Log(fmt.Sprintf("----> [引用] [添加] [%d] 类型:0x%x, refVal:%v\n", i, refType, string(jjs)))
 			StdLogger.Debug("[REFERENCE] [ADD] [%d] refType:0x%x, refVal:%v\n", i, refType, refVal)
 			return
 		}
@@ -245,7 +250,7 @@ func ReadNextTcString(reader io.Reader, refs []*JavaReferenceObject) (string, er
 			}
 		}
 	} else if b == TC_NULL { //考虑String为null的情况
-		Log(fmt.Sprintf("%2x:	TC_NULL，说明没有其他超类的标志\n", b))
+		StdLogger.Debug("%2x:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
 		return "", nil
 	} else if b != TC_STRING {
 		return "", fmt.Errorf("Expected 0x%x, but got 0x%x", TC_STRING, b)
@@ -321,7 +326,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 				return tcStr, nil
 			}
 		case TC_NULL: //表示空指针
-			Log(fmt.Sprintf("%2x:	TC_NULL，说明没有其他超类的标志\n", b))
+			StdLogger.Debug("%2x:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
 			StdLogger.Warn("Stream's body first byte is TC_NULL")
 			return new(JavaTcString), nil
 		default:
