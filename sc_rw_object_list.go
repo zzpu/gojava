@@ -1,6 +1,9 @@
 package main
 
-import "io"
+import (
+	log "github.com/corgi-kx/logcustom"
+	"io"
+)
 import "fmt"
 
 //JavaArrayList
@@ -13,8 +16,8 @@ type JavaArrayList struct {
 func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[JavaArrayList] >>\n")
-	defer StdLogger.Debug("[JavaArrayList] <<\n")
+	log.Debugf("[JavaArrayList] >>\n")
+	defer log.Debugf("[JavaArrayList] <<\n")
 	//start with size
 	if ui, err := ReadUint32(reader); err != nil {
 		return err
@@ -23,7 +26,7 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	}
 	Log("\n\n=================Blockdata数据块起始位置=================\n\n")
 	Log(fmt.Sprintf("%2x:	Blockdata数据块大小\n", arrList.Size))
-	StdLogger.Debug("[JavaArrayList] >> Size:%d\n", arrList.Size)
+	log.Debugf("[JavaArrayList] >> Size:%d\n", arrList.Size)
 	//TC_BLOCKDATA
 	if b, err := ReadNextByte(reader); err != nil {
 		return err
@@ -56,11 +59,11 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	arrList.Eles = make([]interface{}, 0, arrList.Size)
 
 	for i := 0; i < arrList.Size; i += 1 {
-		StdLogger.Debug("[JavaArrayList] >> 读取次数:%d\n", i+1)
-
-		Log(fmt.Sprintf("\n\n======================================================读取第%d个数据块======================================================\n\n", i+1))
+		log.Debugf("[JavaArrayList] >> 读取次数:%d\n", i+1)
+		log.Debugf("[JavaArrayList] ======================读取第%d个数据块======================\n\n", i+1)
+		Log(fmt.Sprintf("\n\n======================读取第%d个数据块======================\n\n", i+1))
 		if ele, err := ReadNextEle(reader, refs); err != nil {
-			StdLogger.Error("[JavaArrayList] Error when read %d element: %v\n", i, err)
+			log.Errorf("[JavaArrayList] Error when read %d element: %v\n", i, err)
 			return err
 		} else {
 			arrList.Eles = append(arrList.Eles, ele.JsonMap())
@@ -73,6 +76,7 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("[Deserialize] There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
+		log.Debugf("[JavaArrayList] %2X:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
 	}
 
@@ -94,8 +98,8 @@ type JavaLinkedList struct {
 func (linkedList *JavaLinkedList) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[JavaLinkedList] >>\n")
-	defer StdLogger.Debug("[JavaLinkedList] <<\n")
+	log.Debugf("[JavaLinkedList] >>\n")
+	defer log.Debugf("[JavaLinkedList] <<\n")
 	//TC_BLOCKDATA
 	if b, err := ReadNextByte(reader); err != nil {
 		return err
@@ -122,7 +126,7 @@ func (linkedList *JavaLinkedList) Deserialize(reader io.Reader, refs []*JavaRefe
 	for i := 0; i < linkedList.Size; i += 1 {
 
 		if ele, err := ReadNextEle(reader, refs); err != nil {
-			StdLogger.Error("[JavaLinkedList] Error when read %d element: %v\n", i, err)
+			log.Errorf("[JavaLinkedList] Error when read %d element: %v\n", i, err)
 			return err
 		} else {
 			linkedList.Eles = append(linkedList.Eles, ele.JsonMap())

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
+	log "github.com/corgi-kx/logcustom"
 	"github.com/go-redis/redis"
 	"os"
 
@@ -18,9 +19,24 @@ var (
 	f *os.File
 )
 
-type Test struct {
-	Value int64
-	Next  string
+type SonEntity struct {
+	SonName string
+}
+
+type BaseEntity struct {
+	BaseName string
+}
+
+type UserEntity struct {
+	BaseEntity
+	Id       int64
+	UserName string
+	UserSex  string
+	Gifts    ArrayList
+	Son      SonEntity
+}
+type ArrayList struct {
+	Eles []interface{}
 }
 
 func main() {
@@ -29,7 +45,7 @@ func main() {
 	defer f.Close()
 
 	redisPool := redis.NewClient(&redis.Options{
-		Addr:         "18.163.110.246:7003",
+		Addr:         "16.162.238.99:7003",
 		Password:     "",
 		DB:           0,
 		DialTimeout:  10 * time.Second,
@@ -40,32 +56,36 @@ func main() {
 		MaxRetries:   2,
 		IdleTimeout:  5 * time.Minute,
 	})
-	aa, _ := redisPool.Get("bbbbbb").Bytes()
+	aa, _ := redisPool.Get("cccccc").Bytes()
 
-	fmt.Println("=========================================")
+	fmt.Println("=========================================\n")
 
 	for _, v := range aa {
 		fmt.Printf("%0x ", v)
 	}
 
-	fmt.Println("=========================================")
+	fmt.Println("=========================================\n")
 
 	var f = bytes.NewBuffer(aa)
 	//jo := &JavaArrayList{}
 	jo, err := DeserializeStream(f)
 	if err != nil {
-		fmt.Println("err=", err)
+		log.Errorf("err=%v", err)
 	}
 
 	j, ok := jo.(*JavaTcObject)
 	if ok {
-
+		aaa, _ := json.Marshal(j.Classes[1].RwDatas)
+		log.Debugf("----------->%v", string(aaa))
 		ccc, _ := json.Marshal(j.JsonData)
 
-		var ttt Test
+		var ttt UserEntity
 		json.Unmarshal(ccc, &ttt)
+		log.Debugf("----------->%v", string(ccc))
 
-		fmt.Println(string(ccc))
+		dddd, _ := json.Marshal(ttt)
+
+		log.Debugf("----------->%v", string(dddd))
 		//rw := j.Classes[0].RwDatas
 		//jj,ok := rw[0].(*JavaArrayList)
 		//

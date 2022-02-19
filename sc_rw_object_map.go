@@ -1,6 +1,9 @@
 package main
 
-import "io"
+import (
+	log "github.com/corgi-kx/logcustom"
+	"io"
+)
 import "math"
 import "reflect"
 import "encoding/binary"
@@ -85,8 +88,8 @@ func NewLinkedHashMap(mp map[string]interface{}) *JavaTcObject {
 func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[JavaHashMap] >>\n")
-	defer StdLogger.Debug("[JavaHashMap] <<\n")
+	log.Debugf("[JavaHashMap] >>\n")
+	defer log.Debugf("[JavaHashMap] <<\n")
 
 	//loadFactor
 	if lf, err := ReadUint32(reader); err != nil {
@@ -120,7 +123,7 @@ func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject
 		return err
 	} else {
 		mp.Buckets = bt
-		StdLogger.Debug("[JavaHashMap] has %d buckest\n", bt)
+		log.Debugf("[JavaHashMap] has %d buckest\n", bt)
 	}
 	//size
 	var size int
@@ -129,19 +132,19 @@ func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject
 	} else {
 		size = int(sz)
 	}
-	StdLogger.Debug("[JavaHashMap] has %d entries\n", size)
+	log.Debugf("[JavaHashMap] has %d entries\n", size)
 	mp.Entries = make(map[string]interface{})
 
 	for i := 0; i < size; i += 1 {
-		StdLogger.Debug("[JavaHashMap] try to read entry [%d]\n", i)
+		log.Debugf("[JavaHashMap] try to read entry [%d]\n", i)
 		if k, err := ReadNextEle(reader, refs); err != nil {
-			StdLogger.Error("[JavaHashMap] Error when read %d entry's key: %v\n", i, err)
+			log.Errorf("[JavaHashMap] Error when read %d entry's key: %v\n", i, err)
 			return err
 		} else if v, err := ReadNextEle(reader, refs); err != nil {
-			StdLogger.Error("[JavaHashMap] Error when read %d entry's value: %v\n", i, err)
+			log.Errorf("[JavaHashMap] Error when read %d entry's value: %v\n", i, err)
 			return err
 		} else {
-			StdLogger.Debug("[JavaHashMap] Got Entry [%d] %v <-> %v\n", i, k, v)
+			log.Debugf("[JavaHashMap] Got Entry [%d] %v <-> %v\n", i, k, v)
 			mp.Entries[fmt.Sprintf("%v", k.JsonMap())] = v.JsonMap()
 		}
 
@@ -167,8 +170,8 @@ func (mp *JavaHashMap) JsonMap() interface{} {
 func (mp *JavaHashMap) Serialize(writer io.Writer, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[JavaHashMap] Serialize >>\n")
-	defer StdLogger.Debug("[JavaHashMap] Serialize <<\n")
+	log.Debugf("[JavaHashMap] Serialize >>\n")
+	defer log.Debugf("[JavaHashMap] Serialize <<\n")
 
 	buff := make([]byte, 8)
 	var err error
@@ -251,7 +254,7 @@ func MapData2Slice(mp map[string]interface{}) []interface{} {
 			switch te {
 			case reflect.Uint8: //表示字节流数组
 				if tmpArr, ok := v.([]byte); !ok {
-					StdLogger.Error("Expect []byte for key %s, but got %v\n", k, v)
+					log.Errorf("Expect []byte for key %s, but got %v\n", k, v)
 					return nil
 				} else {
 					jArr := NewByteArray(tmpArr)
@@ -259,7 +262,7 @@ func MapData2Slice(mp map[string]interface{}) []interface{} {
 				}
 			case reflect.String:
 				if tmpArr, ok := v.([]string); !ok {
-					StdLogger.Error("Expect []byte for key %s, but got %v\n", k, v)
+					log.Errorf("Expect []byte for key %s, but got %v\n", k, v)
 					return nil
 				} else {
 					jArr := NewStringArray(tmpArr)
@@ -267,7 +270,7 @@ func MapData2Slice(mp map[string]interface{}) []interface{} {
 				}
 
 			default:
-				StdLogger.Error("Unsupport hashmap value type %s for %v\n", te, v)
+				log.Errorf("Unsupport hashmap value type %s for %v\n", te, v)
 				return nil
 			}
 		}

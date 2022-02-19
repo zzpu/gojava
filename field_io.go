@@ -1,24 +1,33 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	log "github.com/corgi-kx/logcustom"
+)
 import "io"
 
 //handle JavaFieldIO
 
 //ReadJavaField read java field
 func ReadJavaField(jf *JavaField, reader io.Reader, refs []*JavaReferenceObject) error {
+	log.Debugf("[ReadJavaField] >>++\n")
+	defer log.Debugf("[ReadJavaField] <<--\n")
+
 	var err error
 	if IsPrimType(jf.FieldType) {
 		if jf.FieldValue, err = ReadTcPrimFieldValue(jf.FieldType, reader); err != nil {
 			return err
 		}
+		log.Debugf("[ReadJavaField] %2X: -> %d	成员值\n", jf.FieldValue, jf.FieldValue)
 		Log(fmt.Sprintf("%2x: -> %d	阈值\n", jf.FieldValue, jf.FieldValue))
 
 	} else if jf.FieldType == TC_OBJ_ARRAY {
+		log.Debugf("[ReadJavaField]解析数组\n")
 		if jf.FieldValue, err = ReadTcArrayFieldValue(jf.FieldType, jf.FieldObjectClassName, reader, refs); err != nil {
 			return err
 		}
 	} else if jf.FieldType == TC_OBJ_OBJECT {
+		log.Debugf("[ReadJavaField]解析对象\n")
 		if jf.FieldValue, err = ReadTcObjFieldValue(jf.FieldType, jf.FieldObjectClassName, reader, refs); err != nil {
 			return err
 		}
@@ -90,6 +99,7 @@ func ReadTcObjFieldValue(fType byte, fieldObjectClassName string, reader io.Read
 	}
 	switch fieldObjectClassName {
 	case "Ljava/lang/String;":
+		log.Debugf("[ReadTcObjFieldValue]解析Ljava/lang/String对象\n")
 		return ReadNextTcString(reader, refs)
 	default:
 		//return nil, fmt.Errorf("Not support field value type classname [%s]", fieldObjectClassName)

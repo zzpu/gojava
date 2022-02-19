@@ -1,6 +1,9 @@
 package main
 
-import "io"
+import (
+	log "github.com/corgi-kx/logcustom"
+	"io"
+)
 import "fmt"
 
 //负责将合适的 ScFlag为 SC_RW_FLAG的路由至自定义的各个JavaSerializer 实现类
@@ -12,12 +15,13 @@ import "fmt"
 func DeserializeScRwObject(reader io.Reader, refs []*JavaReferenceObject, className string) (JavaSerializer, error) {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[DeserializeScRwObject] >>\n")
-	defer StdLogger.Debug("[DeserializeScRwObject] <<\n")
+	log.Debugf("[DeserializeScRwObject] >>\n")
+	defer log.Debugf("[DeserializeScRwObject] <<\n")
 	//
 	switch className {
 	case "java.util.HashMap", "java.util.LinkedHashMap":
 		mp := &JavaHashMap{}
+		log.Debugf("[DeserializeScRwObject] 读取java.util.HashMap\n")
 		if err := mp.Deserialize(reader, refs); err != nil {
 			return nil, err
 		} else {
@@ -25,7 +29,7 @@ func DeserializeScRwObject(reader io.Reader, refs []*JavaReferenceObject, classN
 		}
 	case "java.util.ArrayList":
 		lst := &JavaArrayList{}
-
+		log.Debugf("[DeserializeScRwObject] 读取java.util.ArrayList\n")
 		if err := lst.Deserialize(reader, refs); err != nil {
 			return nil, err
 		} else {
@@ -48,8 +52,8 @@ func DeserializeScRwObject(reader io.Reader, refs []*JavaReferenceObject, classN
 func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer, error) {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[ReadNextEle] >>\n")
-	defer StdLogger.Debug("[ReadNextEle] <<\n")
+	log.Debugf("[ReadNextEle] >>\n")
+	defer log.Debugf("[ReadNextEle] <<\n")
 	var tp byte //type
 	var err error
 
@@ -58,17 +62,17 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 	}
 
 	//0x73
-	StdLogger.Debug("[ReadNextEle] type is 0x%x\n", tp)
+	log.Debugf("[ReadNextEle] type is 0x%x\n", tp)
 	var js JavaSerializer
 	switch tp {
 	case TC_STRING:
-		Log(fmt.Sprintf("%2x:	 TC_STRING. 代表一个new String.用String来引用对象(ReadNextEle)。\n", tp))
+		Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象(ReadNextEle)。\n", tp))
 		js = new(JavaTcString)
 	case TC_ARRAY:
 		js = &JavaTcArray{}
 	case TC_OBJECT:
-		StdLogger.Debug("%2x:	 TC_OBJECT. 声明这是一个新的对象(在list里面) \n", tp)
-		Log(fmt.Sprintf("%2x:	 TC_OBJECT. 声明这是一个新的对象(在list里面) \n", tp))
+		log.Debugf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp)
+		Log(fmt.Sprintf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp))
 		js = &JavaTcObject{}
 	case TC_REFERENCE:
 		Log(fmt.Sprintf("%2x:	 TC_REFERENCE\n", tp))
@@ -79,11 +83,11 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 			ref := refs[refIndex-INTBASE_WIRE_HANDLE]
 			switch ref.RefType {
 			case TC_STRING:
-				Log(fmt.Sprintf("%2x:	 TC_STRING. 代表一个new String.用String来引用对象。\n", tp))
+				Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp))
 				if str, ok := ref.Val.(string); !ok {
 					return nil, fmt.Errorf("[JavaHashMap] ref [%v] value should be string type", ref.Val)
 				} else {
-					Log(fmt.Sprintf("%2x:	 TC_STRING. 代表一个new String.用String来引用对象。\n", tp))
+					Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp))
 					tcStr := new(JavaTcString)
 					*tcStr = JavaTcString(str)
 					return tcStr, nil
@@ -120,8 +124,8 @@ func SerializeScRwObject(writer io.Writer, refs []*JavaReferenceObject, classDes
 	className := classDesc.ClassName
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	StdLogger.Debug("[SerializeScRwObject] >>\n")
-	defer StdLogger.Debug("[SerializeScRwObject] <<\n")
+	log.Debugf("[SerializeScRwObject] >>\n")
+	defer log.Debugf("[SerializeScRwObject] <<\n")
 	//
 	switch className {
 	case "java.util.HashMap", "java.util.LinkedHashMap":
