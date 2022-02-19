@@ -54,7 +54,7 @@ func ReadTcPrimFieldValue(fType byte, reader io.Reader) (interface{}, error) {
 		if c, err := ReadUint16(reader); err != nil {
 			return nil, err
 		} else {
-			//StdLogger.Warn("Got TC_PRIM_CHAR VALUE %s\n", string(c))
+			//log.Warnf("Got TC_PRIM_CHAR VALUE %s\n", string(c))
 			return string(c), nil
 		}
 	case TC_PRIM_SHORT:

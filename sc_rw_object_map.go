@@ -210,7 +210,7 @@ func (mp *JavaHashMap) Serialize(writer io.Writer, refs []*JavaReferenceObject) 
 
 	for i := 0; i < len(datas); i += 1 {
 		var item interface{} = datas[i]
-		//StdLogger.Warn("Got item %d %v\n", i, item)
+		//log.Warnf("Got item %d %v\n", i, item)
 		if str, ok := item.(string); ok {
 			tcStr := new(JavaTcString)
 			*tcStr = (JavaTcString)(str)

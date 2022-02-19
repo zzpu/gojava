@@ -309,6 +309,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 	} else {
 		switch b {
 		case TC_ARRAY:
+			log.Debugf("%2X:	TC_ARRAY. 声明这是一个数组.\n", b)
 			tcArr := &JavaTcArray{}
 			if err = tcArr.Deserialize(reader, refs); err != nil {
 				return nil, err
@@ -334,7 +335,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 			}
 		case TC_NULL: //表示空指针
 			log.Debugf("%2X:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
-			StdLogger.Warn("Stream's body first byte is TC_NULL")
+			log.Warnf("Stream's body first byte is TC_NULL")
 			return new(JavaTcString), nil
 		default:
 			return nil, fmt.Errorf("stream should be one of TC_ARRAY & TC_OBJECT & TC_STRING, but got 0x%x", b)

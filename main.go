@@ -45,7 +45,7 @@ func main() {
 	defer f.Close()
 
 	redisPool := redis.NewClient(&redis.Options{
-		Addr:         "16.162.238.99:7003",
+		Addr:         "47.115.166.195:6379",
 		Password:     "",
 		DB:           0,
 		DialTimeout:  10 * time.Second,

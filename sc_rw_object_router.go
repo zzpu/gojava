@@ -80,7 +80,7 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 			return nil, err
 		} else {
 			Log(fmt.Sprintf("%2x:	 TC_REFERENCE引用序号\n", refIndex))
-			ref := refs[refIndex-INTBASE_WIRE_HANDLE]
+			ref := refs[refIndex-INTBASE_WIRE_HANDLE-1]
 			switch ref.RefType {
 			case TC_STRING:
 				Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp))
