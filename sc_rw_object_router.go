@@ -1,7 +1,7 @@
 package main
 
 import (
-	log "github.com/corgi-kx/logcustom"
+	"gs/log"
 	"io"
 )
 import "fmt"
@@ -15,8 +15,8 @@ import "fmt"
 func DeserializeScRwObject(reader io.Reader, refs []*JavaReferenceObject, className string) (JavaSerializer, error) {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	log.Debugf("[DeserializeScRwObject] >>\n")
-	defer log.Debugf("[DeserializeScRwObject] <<\n")
+	log.Debugf("************************BEGIN************************")
+	defer log.Debugf("************************END************************")
 	//
 	switch className {
 	case "java.util.HashMap", "java.util.LinkedHashMap":
@@ -52,8 +52,8 @@ func DeserializeScRwObject(reader io.Reader, refs []*JavaReferenceObject, classN
 func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer, error) {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	log.Debugf("[ReadNextEle] >>\n")
-	defer log.Debugf("[ReadNextEle] <<\n")
+	log.Debugf("************************BEGIN************************")
+	defer log.Debugf("************************END************************")
 	var tp byte //type
 	var err error
 
@@ -62,32 +62,31 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 	}
 
 	//0x73
-	log.Debugf("[ReadNextEle] type is 0x%x\n", tp)
+	log.Debugf("[ReadNextEle] 元素类型 is 0x%X\n", tp)
 	var js JavaSerializer
 	switch tp {
 	case TC_STRING:
-		log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象(ReadNextEle)。\n", tp)
+		log.Tracef("%2x:	 TC_STRING.代表一个new String.用String来引用对象(ReadNextEle)", tp)
 		js = new(JavaTcString)
 	case TC_ARRAY:
 		js = &JavaTcArray{}
 	case TC_OBJECT:
-		log.Debugf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp)
-		log.Debugf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp)
+		log.Tracef("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)", tp)
 		js = &JavaTcObject{}
 	case TC_REFERENCE:
-		log.Debugf("%2x:	 TC_REFERENCE\n", tp)
+		log.Tracef("%2x:	 TC_REFERENCE", tp)
 		if refIndex, err := ReadUint32(reader); err != nil {
 			return nil, err
 		} else {
-			log.Debugf("%2x:	 TC_REFERENCE引用序号\n", refIndex)
+			log.Tracef("%2x:	 TC_REFERENCE引用序号\n", refIndex)
 			ref := refs[refIndex-INTBASE_WIRE_HANDLE-1]
 			switch ref.RefType {
 			case TC_STRING:
-				log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp)
+				log.Tracef("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp)
 				if str, ok := ref.Val.(string); !ok {
 					return nil, fmt.Errorf("[JavaHashMap] ref [%v] value should be string type", ref.Val)
 				} else {
-					log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp)
+					log.Tracef("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp)
 					tcStr := new(JavaTcString)
 					*tcStr = JavaTcString(str)
 					return tcStr, nil
@@ -109,7 +108,7 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 	}
 
 	//数组成员 对象类的描述
-	log.Debugf("\n\n新对象\n\n")
+	log.Debugf("解析map或list的元素对象")
 	if err = js.Deserialize(reader, refs); err != nil {
 		return nil, err
 	}

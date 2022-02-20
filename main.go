@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	_ "encoding/json"
 	"fmt"
-	log "github.com/corgi-kx/logcustom"
 	"github.com/go-redis/redis"
+	"gs/log"
 	"os"
 
 	//jserial "github.com/jkeys089/jserial"
@@ -33,7 +33,9 @@ type UserEntity struct {
 	UserName string
 	UserSex  string
 	Gifts    ArrayList
+	Gifts2   ArrayList
 	Son      SonEntity
+	Others   map[string]interface{}
 }
 type ArrayList struct {
 	Eles []interface{}
@@ -45,7 +47,7 @@ func main() {
 	defer f.Close()
 
 	redisPool := redis.NewClient(&redis.Options{
-		Addr:         "47.115.166.195:6379",
+		Addr:         "16.162.238.99:7003",
 		Password:     "",
 		DB:           0,
 		DialTimeout:  10 * time.Second,
@@ -61,9 +63,12 @@ func main() {
 	for _, v := range aa {
 		fmt.Printf("%0x ", v)
 	}
-	log.SetLogDiscardLevel(log.Levelwarn)
+	//log.SetOutput(f, log.Leveltrace)
+
+	//log.SetLogDiscardLevel(log.Levelwarn)
 	var f = bytes.NewBuffer(aa)
-	//jo := &JavaArrayList{}
+	fmt.Printf("\n")
+	log.Errorf("======================================================")
 	jo, err := DeserializeStream(f)
 	if err != nil {
 		log.Errorf("err=%v", err)
@@ -72,16 +77,16 @@ func main() {
 	j, ok := jo.(*JavaTcObject)
 	if ok {
 		aaa, _ := json.Marshal(j.Classes[1].RwDatas)
-		log.Debugf("----------->%v", string(aaa))
+		log.Tracef("----------->%v", string(aaa))
 		ccc, _ := json.Marshal(j.JsonData)
 
 		var ttt UserEntity
 		json.Unmarshal(ccc, &ttt)
-		log.Debugf("----------->%v", string(ccc))
+		log.Tracef("----------->%v", string(ccc))
 
 		dddd, _ := json.Marshal(ttt)
 
-		log.Debugf("----------->%v", string(dddd))
+		log.Tracef("----------->%v", string(dddd))
 		//rw := j.Classes[0].RwDatas
 		//jj,ok := rw[0].(*JavaArrayList)
 		//

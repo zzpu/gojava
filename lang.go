@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	log "github.com/corgi-kx/logcustom"
+	"gs/log"
 	"io"
 )
 import "encoding/binary"
@@ -130,18 +130,18 @@ func ReadNextJavaField(reader io.Reader, refs []*JavaReferenceObject) (*JavaFiel
 	if jf.FieldType, err = ReadNextByte(reader); err != nil {
 		return nil, err
 	}
-	log.Debugf("%2X: 域类型. \n", jf.FieldType)
+	log.Tracef("%2X: 域类型. \n", jf.FieldType)
 	//field name length
 	var fNameLen uint16
 	if fNameLen, err = ReadUint16(reader); err != nil {
 		return nil, err
 	}
-	log.Debugf("%2X: 域名字的长度.\n", fNameLen)
+	log.Tracef("%2X: 域名字的长度.\n", fNameLen)
 	if jf.FieldName, err = ReadUTFString(reader, int(fNameLen)); err != nil {
 		return nil, err
 	}
 
-	log.Debugf("%2X: %s 域名字描述.\n", jf.FieldName, jf.FieldName)
+	log.Tracef("%2X: 域名字描述[%s]\n", jf.FieldName, jf.FieldName)
 	switch jf.FieldType {
 	case TC_OBJ_OBJECT:
 		fallthrough
@@ -166,7 +166,7 @@ func AddReference(refs []*JavaReferenceObject, refType byte, refVal interface{})
 				refVal,
 			}
 			jjs, _ := json.Marshal(refVal)
-			log.Warnf("----> [引用] [添加] [%d] 类型:%s[0x%x], refVal:%v\n", i, TypeMap[refType], refType, string(jjs))
+			log.Tracef("----> [引用] [添加] [%d] 类型:%s[0x%x], refVal:%v\n", i, TypeMap[refType], refType, string(jjs))
 			//time.Sleep(10 * time.Second)
 			return
 		}
@@ -242,12 +242,12 @@ func ReadNextTcString(reader io.Reader, refs []*JavaReferenceObject) (string, er
 	if b, err := ReadNextByte(reader); err != nil {
 		return "", err
 	} else if b == TC_REFERENCE {
-		log.Debugf("%2X:	TC_REFERENCE 标识引用\n", b)
+		log.Tracef("%2X:	TC_REFERENCE 标识引用\n", b)
 		//to be continued...
 		if refIndex, err := ReadUint32(reader); err != nil {
 			return "", err
 		} else {
-			log.Debugf("%2X:	TC_REFERENCE引用序号\n", refIndex)
+			log.Tracef("%2X:	TC_REFERENCE引用序号\n", refIndex)
 			var ref = refs[refIndex-0x007E0000]
 			if v, ok := ref.Val.(string); !ok {
 				return "", fmt.Errorf("Expected string, but got %v", ref.Val)
@@ -256,13 +256,13 @@ func ReadNextTcString(reader io.Reader, refs []*JavaReferenceObject) (string, er
 			}
 		}
 	} else if b == TC_NULL { //考虑String为null的情况
-		log.Debugf("%2X:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
+		log.Tracef("%2X:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
 		return "", nil
 	} else if b != TC_STRING {
 		log.Debugf("[ReadNextTcString] Expected 0x%x, but got 0x%x", TC_STRING, b)
 		return "", fmt.Errorf("Expected 0x%x, but got 0x%x", TC_STRING, b)
 	} else {
-		log.Debugf("%2X:	 TC_STRING.代表一个new String.用String来引用对象。\n", b)
+		log.Tracef("%2X:	 TC_STRING.代表一个String来引用对象。\n", b)
 	}
 
 	if strLen, err := ReadUint16(reader); err != nil {
@@ -271,8 +271,8 @@ func ReadNextTcString(reader io.Reader, refs []*JavaReferenceObject) (string, er
 		return "", err
 	} else {
 		//如果读出来原始的TC_STRING则产生一个新的 newHandle
-		log.Debugf("%2X:	 该String长度.\n", strLen)
-		log.Debugf("%2X:--> %s\n", str, str)
+		log.Tracef("%02X: 该String长度:%v", strLen, strLen)
+		log.Tracef("%2X: 字符串原文:%s", str, str)
 		AddReference(refs, TC_STRING, str)
 		return str, nil
 	}
@@ -281,14 +281,14 @@ func ReadNextTcString(reader io.Reader, refs []*JavaReferenceObject) (string, er
 //DeserializeStream
 //deserialize stream to java object
 func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
-	log.Debugf("第一部分是序列化文件头\n\n")
+	log.Warnf("第一部分是序列化文件头")
 	//read magic  声明使用了序列化协议.
 	if b, err := ReadUint16(reader); err != nil {
 		return nil, err
 	} else if b != uint16(STREAM_MAGIC) {
 		return nil, fmt.Errorf("stream should start with STREAM_MAGIC but got 0x%x", b)
 	} else {
-		log.Debugf("%2X:	magic  声明使用了序列化协议.\n", b)
+		log.Tracef("%2X:	magic  声明使用了序列化协议.", b)
 	}
 
 	//read version 序列化协议版本.
@@ -297,7 +297,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 	} else if b != uint16(STREAM_VERSION) {
 		return nil, fmt.Errorf("stream should start with STREAM_VERSION but got 0x%x", b)
 	} else {
-		log.Debugf("%02X:	version 序列化协议版本.\n", b)
+		log.Tracef("%02X:	version 序列化协议版本.", b)
 	}
 
 	refs := NewJavaReferencePool(1 << 10) //make([]*JavaReferenceObject, 1000)
@@ -308,7 +308,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 	} else {
 		switch b {
 		case TC_ARRAY:
-			log.Debugf("%2X:	TC_ARRAY. 声明这是一个数组.\n", b)
+			log.Tracef("%2X:	TC_ARRAY. 声明这是一个数组.\n", b)
 			tcArr := &JavaTcArray{}
 			if err = tcArr.Deserialize(reader, refs); err != nil {
 				return nil, err
@@ -316,7 +316,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 				return tcArr, nil
 			}
 		case TC_OBJECT:
-			log.Debugf("%2X:	TC_OBJECT. 声明这是一个新的对象.\n", b)
+			log.Tracef("%2X:	TC_OBJECT. 声明这是一个新的对象.\n", b)
 			tcJo := &JavaTcObject{}
 			if err = tcJo.Deserialize(reader, refs); err != nil {
 				return nil, err
@@ -324,7 +324,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 				return tcJo, nil
 			}
 		case TC_STRING:
-			log.Debugf("%2X:	TC_STRING.代表一个String引用对象.\n", b)
+			log.Tracef("%2X:	TC_STRING.代表一个String引用对象.\n", b)
 			tcStr := new(JavaTcString)
 			if err = tcStr.Deserialize(reader, refs); err != nil {
 				return nil, err
@@ -332,7 +332,7 @@ func DeserializeStream(reader io.Reader) (JavaSerializer, error) {
 				return tcStr, nil
 			}
 		case TC_NULL: //表示空指针
-			log.Debugf("%2X:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
+			log.Tracef("%2X:	TC_NULL，标记后面的数据为空，对应java就是Null\n", b)
 			log.Warnf("Stream's body first byte is TC_NULL")
 			return new(JavaTcString), nil
 		default:

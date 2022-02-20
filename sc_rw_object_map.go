@@ -1,7 +1,7 @@
 package main
 
 import (
-	log "github.com/corgi-kx/logcustom"
+	"gs/log"
 	"io"
 )
 import "math"
@@ -88,8 +88,8 @@ func NewLinkedHashMap(mp map[string]interface{}) *JavaTcObject {
 func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	log.Debugf("[JavaHashMap] >>\n")
-	defer log.Debugf("[JavaHashMap] <<\n")
+	log.Debugf("************************BEGIN************************")
+	defer log.Debugf("************************END************************")
 
 	//loadFactor
 	if lf, err := ReadUint32(reader); err != nil {
@@ -110,7 +110,7 @@ func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject
 	} else if b != TC_BLOCKDATA {
 		return fmt.Errorf("There should be TC_BLOCKDATA, but got 0x%x", b)
 	} else {
-		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
+		log.Tracef("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 	//should follow by 0x08, 表示8字节后是所有的Entry
 	if b, err := ReadNextByte(reader); err != nil {
@@ -156,7 +156,7 @@ func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
-		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
+		log.Tracef("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 
 	return nil

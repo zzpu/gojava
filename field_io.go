@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	log "github.com/corgi-kx/logcustom"
+	"gs/log"
 )
 import "io"
 
@@ -10,8 +10,8 @@ import "io"
 
 //ReadJavaField read java field
 func ReadJavaField(jf *JavaField, reader io.Reader, refs []*JavaReferenceObject) error {
-	log.Infof("[ReadJavaField] >>++\n")
-	defer log.Infof("[ReadJavaField] <<--\n")
+	log.Debugf("************************BEGIN************************")
+	defer log.Debugf("************************END************************")
 
 	var err error
 	if IsPrimType(jf.FieldType) {
@@ -19,15 +19,15 @@ func ReadJavaField(jf *JavaField, reader io.Reader, refs []*JavaReferenceObject)
 			return err
 		}
 		log.Infof("[ReadJavaField] %2X: -> %d	成员值\n", jf.FieldValue, jf.FieldValue)
-		log.Debugf("%2x: -> %d	阈值\n", jf.FieldValue, jf.FieldValue)
+		log.Tracef("%2x: -> %d	阈值\n", jf.FieldValue, jf.FieldValue)
 
 	} else if jf.FieldType == TC_OBJ_ARRAY {
-		log.Debugf("[ReadJavaField]解析数组\n")
+		log.Debugf("类成员为数组")
 		if jf.FieldValue, err = ReadTcArrayFieldValue(jf.FieldType, jf.FieldObjectClassName, reader, refs); err != nil {
 			return err
 		}
 	} else if jf.FieldType == TC_OBJ_OBJECT {
-		log.Debugf("[ReadJavaField]解析对象\n")
+		log.Debugf("类成员为对象")
 		if jf.FieldValue, err = ReadTcObjFieldValue(jf.FieldType, jf.FieldObjectClassName, reader, refs); err != nil {
 			return err
 		}
