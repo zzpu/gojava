@@ -66,28 +66,28 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 	var js JavaSerializer
 	switch tp {
 	case TC_STRING:
-		Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象(ReadNextEle)。\n", tp))
+		log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象(ReadNextEle)。\n", tp)
 		js = new(JavaTcString)
 	case TC_ARRAY:
 		js = &JavaTcArray{}
 	case TC_OBJECT:
 		log.Debugf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp)
-		Log(fmt.Sprintf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp))
+		log.Debugf("%2x:	 TC_OBJECT.声明这是一个新的对象(在list里面)\n", tp)
 		js = &JavaTcObject{}
 	case TC_REFERENCE:
-		Log(fmt.Sprintf("%2x:	 TC_REFERENCE\n", tp))
+		log.Debugf("%2x:	 TC_REFERENCE\n", tp)
 		if refIndex, err := ReadUint32(reader); err != nil {
 			return nil, err
 		} else {
-			Log(fmt.Sprintf("%2x:	 TC_REFERENCE引用序号\n", refIndex))
+			log.Debugf("%2x:	 TC_REFERENCE引用序号\n", refIndex)
 			ref := refs[refIndex-INTBASE_WIRE_HANDLE-1]
 			switch ref.RefType {
 			case TC_STRING:
-				Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp))
+				log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp)
 				if str, ok := ref.Val.(string); !ok {
 					return nil, fmt.Errorf("[JavaHashMap] ref [%v] value should be string type", ref.Val)
 				} else {
-					Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp))
+					log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", tp)
 					tcStr := new(JavaTcString)
 					*tcStr = JavaTcString(str)
 					return tcStr, nil
@@ -109,7 +109,7 @@ func ReadNextEle(reader io.Reader, refs []*JavaReferenceObject) (JavaSerializer,
 	}
 
 	//数组成员 对象类的描述
-	Log("\n\n新对象\n\n")
+	log.Debugf("\n\n新对象\n\n")
 	if err = js.Deserialize(reader, refs); err != nil {
 		return nil, err
 	}

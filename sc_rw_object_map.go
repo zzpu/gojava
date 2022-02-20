@@ -110,7 +110,7 @@ func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject
 	} else if b != TC_BLOCKDATA {
 		return fmt.Errorf("There should be TC_BLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
+		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 	//should follow by 0x08, 表示8字节后是所有的Entry
 	if b, err := ReadNextByte(reader); err != nil {
@@ -156,7 +156,7 @@ func (mp *JavaHashMap) Deserialize(reader io.Reader, refs []*JavaReferenceObject
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
+		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 
 	return nil

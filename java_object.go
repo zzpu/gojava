@@ -126,7 +126,7 @@ func (tcStr *JavaTcString) Deserialize(reader io.Reader, refs []*JavaReferenceOb
 	var err error
 	switch buff[0] {
 	case TC_REFERENCE:
-		Log(fmt.Sprintf("%2x:	 TC_REFERENCE\n", buff[0]))
+		log.Debugf("%2x:	 TC_REFERENCE\n", buff[0])
 		if refIndex, err := ReadUint32(reader); err != nil {
 			return err
 		} else {
@@ -143,7 +143,7 @@ func (tcStr *JavaTcString) Deserialize(reader io.Reader, refs []*JavaReferenceOb
 			}
 		}
 	case TC_STRING:
-		Log(fmt.Sprintf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", buff[0]))
+		log.Debugf("%2x:	 TC_STRING.代表一个new String.用String来引用对象。\n", buff[0])
 		if strLen, err = ReadUint16(reader); err != nil {
 			return err
 		}
@@ -225,10 +225,8 @@ func (tcStr *JavaTcString) JsonMap() interface{} {
 //一个classDesc从TC_CLASSDESC开始，以TC_ENDBLOCKDATA终
 //一个TC_OBJECT包含多个TC_CLASSDESC
 func (classDesc *JavaTcClassDesc) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
-	StdLogger.LevelUp()
-	defer StdLogger.LevelDown()
-	log.Debugf("[JavaTcClassDesc] >> ++ BEGIN\n")
-	defer log.Debugf("[JavaTcClassDesc] << --END\n")
+	log.Debugf("************************BEGIN************************")
+	defer log.Debugf("************************END************************")
 	//TC_CLASSDESC
 	var buff = make([]byte, 4)
 	var err error
@@ -265,23 +263,19 @@ func (classDesc *JavaTcClassDesc) Deserialize(reader io.Reader, refs []*JavaRefe
 		classNameLen = binary.BigEndian.Uint16(buff[:2])
 	}
 
-	Log(fmt.Sprintf("%2x:	Class名字的长度.\n", classNameLen))
-	log.Debugf("[JavaTcClassDesc] 尝试读取类名长度, len=%d\n", classNameLen)
+	log.Debugf("%2x:	Class名字的长度.\n", classNameLen)
 	if classDesc.ClassName, err = ReadUTFString(reader, int(classNameLen)); err != nil {
 		return err
 	}
-	Log(fmt.Sprintf("%2x: --> %s\n", []byte(classDesc.ClassName), classDesc.ClassName))
+	log.Debugf("%2x: --> 尝试读取类名 className=[%s]\n", []byte(classDesc.ClassName), classDesc.ClassName)
 	//6a 61 76 61 2e 75 74 69 6c 2e 41 72 72 61 79 4c 69 73 74
-	log.Debugf("[JavaTcClassDesc] 尝试读取类名 classDesc.className is [%s]\n", classDesc.ClassName)
-
 	// SerialVersionUID, 序列化ID，如果没有指定，
 	//则会由算法随机生成一个8byte的ID.
 	//78 81 d2 1d 99 c7 61 9d
 	if classDesc.SerialVersionUID, err = ReadUint64(reader); err != nil {
 		return err
 	}
-	log.Debugf("[JavaTcClassDesc] %2x: SerialVersionUID,序列化ID，如果没有指定，则会由算法随机生成一个8byte的ID.\n", classDesc.SerialVersionUID)
-	Log(fmt.Sprintf("%2x: SerialVersionUID,序列化ID，如果没有指定，则会由算法随机生成一个8byte的ID.\n", classDesc.SerialVersionUID))
+	log.Debugf("%2x: SerialVersionUID,序列化ID，如果没有指定，则会由算法随机生成一个8byte的ID.\n", classDesc.SerialVersionUID)
 
 	//after read serialVersionUID newHandle should be added
 	AddReference(refs, TC_CLASSDESC, classDesc)
@@ -299,10 +293,9 @@ func (classDesc *JavaTcClassDesc) Deserialize(reader io.Reader, refs []*JavaRefe
 		classDesc.ScFlag = sc
 	}
 	if classDesc.ScFlag == SC_SERIALIZABLE {
-		Log(fmt.Sprintf("%2x: 标记号. 该值声明该对象支持序列化。\n", classDesc.ScFlag))
+		log.Debugf("%2x: 标记号. 该值声明该对象支持序列化。\n", classDesc.ScFlag)
 	} else if classDesc.ScFlag == SC_RW_OBJECT {
-		log.Debugf("[JavaTcClassDesc] %2x: 标记号. 拥有自己的writeObject, readObject, for example: HashMap, 此种类型需要每一个定义一个相应的结构体\n", classDesc.ScFlag)
-		Log(fmt.Sprintf("%2x: 标记号. 拥有自己的writeObject, readObject, for example: HashMap, 此种类型需要每一个定义一个相应的结构体\n", classDesc.ScFlag))
+		log.Debugf("%2x: 标记号. 拥有自己的writeObject, readObject, for example: HashMap, 此种类型需要每一个定义一个相应的结构体\n", classDesc.ScFlag)
 	}
 
 	//number of fields in this class
@@ -310,21 +303,18 @@ func (classDesc *JavaTcClassDesc) Deserialize(reader io.Reader, refs []*JavaRefe
 	if numberOfFields, err := ReadUint16(reader); err != nil {
 		return err
 	} else {
-		Log(fmt.Sprintf("%2x: 该类所包含的域个数。\n", numberOfFields))
-		log.Debugf("[JavaTcClassDesc] %s 有 %d 个成员\n", classDesc.ClassName, numberOfFields)
+		log.Debugf("%2x: 该类所包含的域个数,%s 有 %d 个成员\n", numberOfFields, classDesc.ClassName, numberOfFields)
 		classDesc.Fields = make([]*JavaField, int(numberOfFields))
 
-		Log("\n\n第三部分是对象中各个属性的描述\n\n")
+		log.Debugf("\n\n第三部分是对象中各个属性的描述\n\n")
 		for i := 0; i < int(numberOfFields); i++ {
-			Log(fmt.Sprintf("第%d个属性\n", i+1))
-			log.Debugf("[JavaTcClassDesc] ClassName:[%v] 第%d个属性\n", classDesc.ClassName, i+1)
 			//域类型. 49 代表"I", 也就是Int.
 			//00 04: 域名字的长度. 73 69 7a 65
 			if classDesc.Fields[i], err = ReadNextJavaField(reader, refs); err != nil {
 				return err
 			} else {
 				classDesc.Fields[i].FieldOwnerScFlag = classDesc.ScFlag
-				log.Debugf("[JavaTcClassDesc] 第%d个属性 :%v\n", i+1, classDesc.Fields[i])
+				log.Debugf("ClassName:[%v] 第%d个属性 :%v\n", classDesc.ClassName, i+1, classDesc.Fields[i])
 			}
 		}
 	}
@@ -334,8 +324,7 @@ func (classDesc *JavaTcClassDesc) Deserialize(reader io.Reader, refs []*JavaRefe
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("[JavaTcClassDesc] Expect TC_ENDBLOCKDATA 0x78, but got 0x%x", b)
 	} else {
-		log.Debugf("[JavaTcClassDesc] %02x: TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
-		Log(fmt.Sprintf("%02x: TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
+		log.Debugf("%02x: TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 
 	return nil
@@ -477,8 +466,8 @@ func (classDesc *JavaTcClassDesc) Serialize(writer io.Writer, refs []*JavaRefere
 func (jo *JavaTcObject) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	log.Debugf("[JavaTcObject] >> ++BEGIN\n")
-	defer log.Debugf("[JavaTcObject] << --END\n")
+	log.Infof("[JavaTcObject] >> ++BEGIN\n")
+	defer log.Infof("[JavaTcObject] << --END\n")
 	//firstly, analysis all tc_classdesc  声明这里开始一个新Class。
 	//TC_OBJECT
 	var buff = make([]byte, 4)
@@ -489,7 +478,6 @@ func (jo *JavaTcObject) Deserialize(reader io.Reader, refs []*JavaReferenceObjec
 
 	if TC_OBJECT == buff[0] { //证明开头的tc_object未被消费，则再读下一个
 		log.Debugf("%2x:	TC_OBJECT. 声明这是一个新的对象(未被消费).\n", buff[0])
-		Log(fmt.Sprintf("\n\n%2x:	TC_OBJECT. 声明这是一个新的对象(未被消费).\n", buff[0]))
 		if _, err = reader.Read(buff[:1]); err != nil {
 			return err
 		}
@@ -501,7 +489,7 @@ out:
 	for {
 		switch buff[0] {
 		case TC_REFERENCE:
-			Log(fmt.Sprintf("%2x:	TC_REFERENCE 标识引用\n", buff[0]))
+			log.Debugf("%2x:	TC_REFERENCE 标识引用\n", buff[0])
 			//在TC_OBJECT 之后遇到 TC_REFERENCE后，就不会有0x78,0x70结束符了
 			if _, err = reader.Read(buff[:4]); err != nil {
 				log.Errorf("[JavaTcObject] try to get classDesc ref failed: %v\n", err)
@@ -514,19 +502,17 @@ out:
 					if ref.RefType != TC_CLASSDESC {
 						return fmt.Errorf("Expected TC_CLASSDESC @ ref [%d]", refIndex-INTBASE_WIRE_HANDLE)
 					} else if tcd, ok := ref.Val.(*JavaTcClassDesc); ok {
-						log.Debugf("[JavaTcObject] >>>>> 附加类:%v \n", tcd.ClassName)
-						Log(fmt.Sprintf("%2x:	TC_REFERENCE引用序号(OBJECT-->TC_CLASSDESC)--> %v\n", refIndex, tcd.ClassName))
+						log.Debugf("%2x:	TC_REFERENCE引用序号(OBJECT-->TC_CLASSDESC)--> %v\n", refIndex, tcd.ClassName)
 						jo.Classes = append(jo.Classes, tcd)
 						break out
 					} else {
 						return fmt.Errorf("Unexpected error when deserialize TC_OBJECT, read TC_CLASSDESC, ref=%v", ref)
 					}
 				} else if ref.RefType == TC_OBJECT {
-					Log(fmt.Sprintf("%2x:	TC_REFERENCE引用序号(OBJECT-->TC_OBJECT)\n", refIndex))
+					log.Debugf("%2x:	TC_REFERENCE引用序号(OBJECT-->TC_OBJECT)\n", refIndex)
 					refIndex := binary.BigEndian.Uint32(buff[:4])
 					ref := refs[int(refIndex)-INTBASE_WIRE_HANDLE]
 					if ref.RefType != TC_OBJECT {
-						//---------------------------==================================----------------------------------------------
 						return fmt.Errorf("[JavaTcObject] -->Expect ref [%d] type TC_OBJECT, but 0x%x", refIndex, ref.RefType)
 					} else if jop, ok := ref.Val.(*JavaTcObject); !ok {
 						return fmt.Errorf("[JavaTcObject] Expect ref[%d] val *JavaTcObject, but %v", refIndex, ref.Val)
@@ -541,18 +527,19 @@ out:
 			}
 			//0x72: TC_CLASSDESC. 声明这里开始一个新Class。
 		case TC_CLASSDESC:
-			Log("\n\n第二部分是序列化的类的描述\n\n")
-			Log(fmt.Sprintf("%2x:	TC_CLASSDESC. 声明这里开始一个新Class。\n", buff[0]))
+			log.Debugf("\n\n第二部分是序列化的类的描述\n\n")
+			log.Debugf("%2x:	TC_CLASSDESC. 声明这里开始一个新Class。\n", buff[0])
+
 			tcs := &JavaTcClassDesc{}
-			log.Debugf("[JavaTcObject] 尝试获取类描述符 classDesc [%d]\n", len(jo.Classes))
+			log.Infof("[JavaTcObject] 尝试获取类描述符 classDesc [%d]\n", len(jo.Classes))
 			jo.Classes = append(jo.Classes, tcs)
 			if err := tcs.Deserialize(reader, refs); err != nil {
 				return err
 			}
 		case TC_NULL:
-			log.Debugf("[JavaTcObject] %2x:	TC_NULL，标记后面的数据为空，对应java就是Null\n", buff[0])
+			log.Infof("[JavaTcObject] %2x:	TC_NULL，标记后面的数据为空，説明已经没有父类信息了\n", buff[0])
 			Log("\n\n第四部分为对象的父类信息描述\n\n")
-			Log(fmt.Sprintf("%2x:	TC_NULL，标记后面的数据为空，对应java就是Null\n", buff[0]))
+			log.Debugf("%2x:	TC_NULL，标记后面的数据为空，説明已经没有父类信息了\n", buff[0])
 			//newHandle
 			//[REFERENCE] [ADD] [5] refType:0x73, refVal:&{[0xc0000920f0] 0 <nil>}
 			//[REFERENCE] [ADD] [6] refType:0x74, refVal:0
@@ -623,7 +610,7 @@ out:
 				}
 				//log.Debugf("=======>%v", jsVal)
 				//os.Exit(0)
-				////Log(fmt.Sprintf("%2x:	 TC_REFERENCE\n", buff[0]))
+				////log.Debugf("%2x:	 TC_REFERENCE\n", buff[0])
 			} else {
 
 				log.Warnf("[JavaTcObject] Deserialize Expect JavaSerializer for SC_RW_OBJECT,but got %v\n", rwVal)

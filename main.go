@@ -58,14 +58,10 @@ func main() {
 	})
 	aa, _ := redisPool.Get("cccccc").Bytes()
 
-	fmt.Println("=========================================\n")
-
 	for _, v := range aa {
 		fmt.Printf("%0x ", v)
 	}
-
-	fmt.Println("=========================================\n")
-
+	log.SetLogDiscardLevel(log.Levelwarn)
 	var f = bytes.NewBuffer(aa)
 	//jo := &JavaArrayList{}
 	jo, err := DeserializeStream(f)

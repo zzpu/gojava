@@ -10,16 +10,16 @@ import "io"
 
 //ReadJavaField read java field
 func ReadJavaField(jf *JavaField, reader io.Reader, refs []*JavaReferenceObject) error {
-	log.Debugf("[ReadJavaField] >>++\n")
-	defer log.Debugf("[ReadJavaField] <<--\n")
+	log.Infof("[ReadJavaField] >>++\n")
+	defer log.Infof("[ReadJavaField] <<--\n")
 
 	var err error
 	if IsPrimType(jf.FieldType) {
 		if jf.FieldValue, err = ReadTcPrimFieldValue(jf.FieldType, reader); err != nil {
 			return err
 		}
-		log.Debugf("[ReadJavaField] %2X: -> %d	成员值\n", jf.FieldValue, jf.FieldValue)
-		Log(fmt.Sprintf("%2x: -> %d	阈值\n", jf.FieldValue, jf.FieldValue))
+		log.Infof("[ReadJavaField] %2X: -> %d	成员值\n", jf.FieldValue, jf.FieldValue)
+		log.Debugf("%2x: -> %d	阈值\n", jf.FieldValue, jf.FieldValue)
 
 	} else if jf.FieldType == TC_OBJ_ARRAY {
 		log.Debugf("[ReadJavaField]解析数组\n")

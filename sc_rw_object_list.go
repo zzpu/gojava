@@ -16,24 +16,24 @@ type JavaArrayList struct {
 func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	log.Debugf("[JavaArrayList] >>\n")
-	defer log.Debugf("[JavaArrayList] <<\n")
+	log.Infof("[JavaArrayList] >>\n")
+	defer log.Infof("[JavaArrayList] <<\n")
 	//start with size
 	if ui, err := ReadUint32(reader); err != nil {
 		return err
 	} else {
 		arrList.Size = int(ui)
 	}
-	Log("\n\n=================Blockdata数据块起始位置=================\n\n")
-	Log(fmt.Sprintf("%2x:	Blockdata数据块大小\n", arrList.Size))
-	log.Debugf("[JavaArrayList] >> Size:%d\n", arrList.Size)
+	log.Debugf("\n\n=================Blockdata数据块起始位置=================\n\n")
+	log.Debugf("%2x:	Blockdata数据块大小\n", arrList.Size)
+	log.Infof("[JavaArrayList] >> Size:%d\n", arrList.Size)
 	//TC_BLOCKDATA
 	if b, err := ReadNextByte(reader); err != nil {
 		return err
 	} else if b != TC_BLOCKDATA {
 		return fmt.Errorf("There should be TC_BLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	在对象的WriteObject方法中，我们可以自定义的写入数据，除了非Object数据，其他所有数据将会被写在一起，也就是BlockData\n", b))
+		log.Debugf("%2x:	在对象的WriteObject方法中，我们可以自定义的写入数据，除了非Object数据，其他所有数据将会被写在一起，也就是BlockData\n", b)
 	}
 
 	//should follow by 0x04, 表示4字节后是所有的elements --> header长度
@@ -42,7 +42,7 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	} else if b != 0x04 {
 		return fmt.Errorf("There should be 0x04, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	固定为0x04\n", b))
+		log.Debugf("%2x:	固定为0x04\n", b)
 	}
 
 	//数组元素的个数
@@ -52,16 +52,16 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 		return fmt.Errorf("Size should be %d, but got %d", arrList.Size, ui)
 	} else {
 
-		Log(fmt.Sprintf("%2x:	数组元素的个数\n", ui))
+		log.Debugf("%2x:	数组元素的个数\n", ui)
 	}
 
 	//now it's the data
 	arrList.Eles = make([]interface{}, 0, arrList.Size)
 
 	for i := 0; i < arrList.Size; i += 1 {
-		log.Debugf("[JavaArrayList] >> 读取次数:%d\n", i+1)
-		log.Debugf("[JavaArrayList] ======================读取第%d个数据块======================\n\n", i+1)
-		Log(fmt.Sprintf("\n\n======================读取第%d个数据块======================\n\n", i+1))
+		log.Infof("[JavaArrayList] >> 读取次数:%d\n", i+1)
+		log.Infof("[JavaArrayList] ======================读取第%d个数据块======================\n\n", i+1)
+		log.Debugf("\n\n======================读取第%d个数据块======================\n\n", i+1)
 		if ele, err := ReadNextEle(reader, refs); err != nil {
 			log.Errorf("[JavaArrayList] Error when read %d element: %v\n", i, err)
 			return err
@@ -76,8 +76,8 @@ func (arrList *JavaArrayList) Deserialize(reader io.Reader, refs []*JavaReferenc
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("[Deserialize] There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
-		log.Debugf("[JavaArrayList] %2X:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
+		log.Infof("[JavaArrayList] %2X:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
+		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 
 	return nil
@@ -98,15 +98,15 @@ type JavaLinkedList struct {
 func (linkedList *JavaLinkedList) Deserialize(reader io.Reader, refs []*JavaReferenceObject) error {
 	StdLogger.LevelUp()
 	defer StdLogger.LevelDown()
-	log.Debugf("[JavaLinkedList] >>\n")
-	defer log.Debugf("[JavaLinkedList] <<\n")
+	log.Infof("[JavaLinkedList] >>\n")
+	defer log.Infof("[JavaLinkedList] <<\n")
 	//TC_BLOCKDATA
 	if b, err := ReadNextByte(reader); err != nil {
 		return err
 	} else if b != TC_BLOCKDATA {
 		return fmt.Errorf("There should be TC_BLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
+		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 
 	//should follow by 0x04, 表示4字节后是所有的elements
@@ -139,7 +139,7 @@ func (linkedList *JavaLinkedList) Deserialize(reader io.Reader, refs []*JavaRefe
 	} else if b != TC_ENDBLOCKDATA {
 		return fmt.Errorf("There should be TC_ENDBLOCKDATA, but got 0x%x", b)
 	} else {
-		Log(fmt.Sprintf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b))
+		log.Debugf("%2x:	TC_ENDBLOCKDATA,在readObject中，表明数据已经读取完毕\n", b)
 	}
 
 	return nil
